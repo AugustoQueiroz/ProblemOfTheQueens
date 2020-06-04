@@ -3,112 +3,290 @@
 	<head>
 		<title>ProblemOfTheQueens</title>
 
+		<!-- Font Awesome -->
+		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+
+		<!-- Google Fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&display=swap" rel="stylesheet"> 
+
 <style>
+* {
+	color: #262527;
+}
+
+#rules {
+	position: absolute;
+	top: 5vh;
+	left: 5vh;
+	width: 30vh;
+}
+
+h1 {
+	font-family: 'Abril Fatface', cursive;
+	font-size: 40px;
+}
+
+#rules p {
+	font-size: 20px;
+}
+
 #board {
 	width: 80vh;
 	height: 80vh;
 	margin: auto;
+	margin-top: 10vh;
 }
 
 		.line {
 			width: 100%;
-			height: 12.5%;
+
+			border-right: 20px solid #ffffff;
+			border-left: 20px solid #ffffff;
+		}
+
+		.line.current {
+			border-right: 20px solid #ffe74c;
+			border-left: 20px solid #ffe74c;
+		}
+
+		.line.current.p2 {
+			border-right: 20px solid #01AF75;
+			border-left: 20px solid #01AF75;
 		}
 
 		.square {
 			display: inline-block;
 
-			width: 12.5%;
 			height: 100%;
 		}
 
 		.white {
-			background-color: white;
+			background-color: #f6f8ff;
 		}
 
 		.black {
-			background-color: black;
+			background-color: #262527;
 		}
 
 		.queen {
-			background-color: yellow;
+			color: #ffe74c;
+			text-align: center;
+			font-size: 30px;
+			overflow: auto;
+		}
+
+		.fas {
+			color: inherit;
+		}
+
+		.p2 {
+			color: #01AF75;
 		}
 
 		.checked {
-			background-color: red;
+			color: #DF2935cc;
+			font-size: 30px;
+			text-align: center;
+			overflow: auto;
+		}
+
+		#GameOverScreen {
+			width: 80vw;
+			/*height: 30vh;*/
+			
+			position: absolute;
+			left: 10vw;
+			top: 35vh;
+			display: none;
+
+			border: 5px solid #262527;
+			background-color: white;
+			box-shadow: 10px 10px #262527ac;
+
+			text-align: center;
+		}
+
+		#GameOverScreen.success {
+
+		}
+
+		#replayButton {
+			width: 250px;
+			height: 60px;
+
+			margin: auto;
+			margin-bottom: 30px;
+
+			background-color: #262527;
+			color: white;
+
+			font-size: 30px;
+			line-height: 60px;
 		}
 </style>
-	</head>
-
-	<body>
-		<div id='board'>
-
-		</div>
 
 	<script>
+		var multiplayer = false;
+
 		var nOfQueens = 8;
 var queenPositions = [];
+var currentLine = 0;
 
 		function placeQueen(e) {
 			if (e.target.className.includes("queen") || e.target.className.includes("checked"))
 				return;
 
 			var i = parseInt(e.target.id.split("_")[0]);
+			if (i != currentLine) return;
 			var j = parseInt(e.target.id.split("_")[1]);
 			queenPositions.push([i, j]);
 			console.log(i, j);
 
 			e.target.className += " queen";
+			if (multiplayer && currentLine % 2 == 1) e.target.className += " p2"
+			e.target.innerHTML = "<i class='fas fa-crown'></i>";
 
 			for (var it = 0; it < nOfQueens; it++) {
 				if (it != j) {
 					square = document.getElementById(i.toString() + "_" + it.toString());
 					square.className += ' checked';
+					square.innerHTML = "<i class='fas fa-skull-crossbones'></i>";
 				}
 				if (it != i) {
 					square = document.getElementById(it.toString() + "_" + j.toString());
 					square.className += ' checked';
+					square.innerHTML = "<i class='fas fa-skull-crossbones'></i>";
 				}
 
 				if (it + (i - j) >= 0 && it + (i - j) != i && it != j && it + (i - j) < nOfQueens) {
 					square = document.getElementById((it + (i - j)).toString() + "_" + it.toString());
 					square.className += ' checked';
+					square.innerHTML = "<i class='fas fa-skull-crossbones'></i>";
 				}
 
 				if (it + (j - (nOfQueens-i-1)) >= 0 && it + (j - (nOfQueens-i-1)) != i && (nOfQueens-it-1) != j && it + (j - (nOfQueens-i-1)) < nOfQueens) {
 					console.log(nOfQueens-it-1)
 					square = document.getElementById((it + (j - (nOfQueens-i-1))).toString() + "_" + (nOfQueens-it-1).toString());
 					square.className += ' checked';
+					square.innerHTML = "<i class='fas fa-skull-crossbones'></i>";
 				}
 			}
+			lines = document.getElementsByClassName('line')
+			lines[currentLine].className = 'line';
+			currentLine++;
+			if (currentLine < nOfQueens) {
+				lines[currentLine].className += ' current';
+				if (multiplayer && currentLine % 2 == 1) lines[currentLine].className += ' p2'
+			}
+
+			checkEndGame();
 		}
+
+function checkEndGame() {
+	if (currentLine == nOfQueens) {
+		displayGameOverScreen('success');
+	}
+
+	for (var j = 0; j < nOfQueens; j++) {
+		square = document.getElementById(currentLine + '_' + j);
+		if (!square.className.includes('checked'))
+			return;
+	}
+
+	// Game Over
+	var additionalClasses = '';
+	if (multiplayer && currentLine % 2 == 1) {
+		// Player 1 wins
+		additionalClasses += ' p1Victory';
+	} else if (multiplayer && currentLine % 2 == 0) {
+		// Player 2 wins
+		additionalClasses += ' p2Victory';
+	}
+	displayGameOverScreen(additionalClasses);
+}
+
+function displayGameOverScreen(additionalClasses) {
+	gameOverScreen = document.getElementById('GameOverScreen');
+
+	gameOverScreen.style.display = 'block';
+	gameOverScreen.className += " " + additionalClasses;
+
+	if (additionalClasses.includes('success')) {
+		gameOverScreen.getElementsByTagName('h1')[0].innerHTML = "Success!";
+	} else {
+		gameOverScreen.getElementsByTagName('h1')[0].innerHTML = "Game Over";
+	}
+}
 	</script>
 
 	<script>
-		var boardEl = document.getElementById('board');
+		function buildBoard() {
+			var boardEl = document.getElementById('board');
+			boardEl.innerHTML = '';
 
-var paint_black = true;
-for (var i = 0; i < nOfQueens; i++) {
-	line = document.createElement("div");
-	line.className = "line";
-	for (var j = 0; j < nOfQueens; j++) {
-		square = document.createElement("div");
-		square.onclick = placeQueen;
-		square.id = i.toString() + "_" + j.toString();
-		square.className = "square";
-		if (paint_black) {
-			square.className += " black";
-		} else {
-			square.className += " white";
+			var paint_black = true;
+			for (var i = 0; i < nOfQueens; i++) {
+					line = document.createElement("div");
+					line.className = "line";
+					if (i == currentLine) line.className += " current";
+					line.style.height = (100 / nOfQueens).toString() + "%";
+					boardEl.appendChild(line);
+					for (var j = 0; j < nOfQueens; j++) {
+								square = document.createElement("div");
+								square.onclick = placeQueen;
+								square.id = i.toString() + "_" + j.toString();
+								square.className = "square";
+								square.style.width = (100 / nOfQueens).toString() + "%";
+								if (paint_black) {
+												square.className += " black";
+											} else {
+															square.className += " white";
+														}
+								paint_black = !paint_black;
+
+								line.appendChild(square);
+								square.style.fontSize = (square.clientHeight / 2) + "px";
+								square.style.lineHeight = (square.clientHeight) + "px";
+							}
+					if (nOfQueens % 2 == 0) paint_black = !paint_black;
+
+			}
+			
 		}
-		paint_black = !paint_black;
 
-		line.appendChild(square);
-	}
-	paint_black = !paint_black;
+function updateNQueens() {
+	nOfQueens = document.getElementById('nOfQueens').value;
+	currentLine = 0;
 
-	boardEl.appendChild(line);
+	buildBoard();
 }
+	</script>
+	</head>
+
+	<body>
+		<div id='rules'>
+			<h1>The Problem of the Queens</h1>
+
+			<p>
+			You must place <input id='nOfQueens' type='number' value='8' onchange='updateNQueens()'> Chess queens on the board such that no two queens are threatening each other (that is, they don't share a line, column, or diagonal)
+			</p>
+		</div>
+
+		<div id='board'>
+
+		</div>
+
+		<div id='GameOverScreen'>
+			<h1>Game Over</h1>
+
+			<div id='replayButton' onclick='window.location.reload()'>
+				Replay
+			</div>
+		</div>
+
+
+	<script>
+		buildBoard();
 	</script>
 	</body>
 </html>
